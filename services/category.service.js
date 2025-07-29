@@ -1,56 +1,47 @@
-const { faker } = require("@faker-js/faker");
 const boom = require("@hapi/boom");
+const { models } = require("../libs/sequelize");
 
 class CategoryService {
 
   constructor() {
     this.categories = [];
-    this.generate();
   }
 
-  generate() {
-    const limit = 5;
-    for (let index = 0; index < limit; index++) {
-      this.categories.push({
-        id: faker.string.uuid(),
-        name: faker.commerce.department()
-      })
-    }
+  async create(data) {
+    const newCategory = await models.Category.create(data);
+    return newCategory;
   }
 
   async find() {
-    return new Promise((resolve, reject) => {
-      resolve(this.categories);
-    })
-  }
-
-  async findOne(id) {
-    const categories = this.categories.find(categories => categories.id === id);
-    if (!categories) {
-      throw bomm.notFound('categories not found');
-    }
+    const categories = await models.Category.findAll();
     return categories;
   }
 
+  async findOne(id) {
+    const category = await models.Category.findByPk(id, {
+      include: ["products"],
+    });
+    if (!category) {
+      throw boom.notFound('category not found');
+    }
+    return category;
+  }
+
   async update(id, changes) {
-    const index = this.categories.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw boom.notFound('categories not found');
+    const category = await models.Category.findByPk(id);
+    if (!category) {
+      throw boom.notFound('category not found');
     }
-    const category = this.categories[index];
-    this.categories[index] = {
-      ...category,
-      ...changes,
-    }
-    return this.categories[index];
+    const updatedCategory = await category.update(changes);
+    return updatedCategory;
   }
 
   async delete(id) {
-    const index = this.categories.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw boom.notFound('product not found');
+    const category = await models.Category.findByPk(id);
+    if (!category) {
+      throw boom.notFound('category not found');
     }
-    this.categories.splice(index, 1);
+    await category.destroy();
     return { id };
   }
 }

@@ -1,8 +1,8 @@
 const express = require("express");
-const { faker } = require("@faker-js/faker");
 
 const CategoryService = require("../services/category.service");
-
+const { createCategorySchema, getCategorySchema, updateCategorySchema } = require("../schemas/category.schema");
+const validatorHandler = require("../middlewares/validator.handler");
 
 const router = express.Router();
 const service = new CategoryService();
@@ -20,7 +20,9 @@ router.get("/", async (req, res) => {
   res.json(category);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id",
+  validatorHandler(getCategorySchema, "params"),
+  async (req, res, next) => {
   try {
     const { id } = req.params;
     const categorie = await service.findOne(id);
@@ -30,13 +32,18 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/",
+  validatorHandler(createCategorySchema, "body"),
+  async (req, res) => {
   const body = req.body;
   const newCategory = await service.create(body);
   res.status(201).json(newCategory);
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id",
+  validatorHandler(getCategorySchema, "params"),
+  validatorHandler(updateCategorySchema, "body"),
+  async (req, res, next) => {
   try {
     const { id } = req.params;
     const body = req.body;
@@ -47,7 +54,9 @@ router.patch("/:id", async (req, res) => {
   }
 })
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",
+  validatorHandler(getCategorySchema, "params"),
+  async (req, res, next) => {
   try {
     const { id } = req.params;
     const rta = await service.delete(id);
@@ -56,7 +65,5 @@ router.delete("/:id", async (req, res) => {
     next(error);
   }
 })
-
-
 
 module.exports = router;

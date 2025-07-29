@@ -30,6 +30,7 @@ function ormErrorHandler(err, req, res, next) {
       message: err.name,
       errors: err.errors,
     });
+    return; // Agregar return para evitar llamar a next(err)
   }
   next(err);
 }
